@@ -1,0 +1,86 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(VISITOR)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshToken String?
+
+  reports Report[]
+  Session Session[]
+
+  @@index([email])
+}
+
+model Report {
+  id     String @id @default(cuid())
+  name   String
+  userId String
+  fileId String
+  User   User   @relation(fields: [userId], references: [id])
+  File   File   @relation(fields: [fileId], references: [id])
+}
+
+model File {
+  id     String   @id @default(cuid())
+  url    String
+  Report Report[]
+}
+
+model Session {
+  id              String     @id @default(cuid())
+  visitorId       String
+  visitor         User       @relation(fields: [visitorId], references: [id])
+  startTime       DateTime   @default(now())
+  endTime         DateTime?
+  status          String
+  engagementScore Int?
+  exportId        String?
+  analytics       Analytics? @relation(fields: [analyticsId], references: [id])
+  analyticsId     String?
+  Artwork         Artwork[]
+}
+
+model Artwork {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+  s3Url     String
+  thumbUrl  String
+  style     String
+  createdAt DateTime @default(now())
+}
+
+model Analytics {
+  id            String    @id @default(cuid())
+  sessionId     String    @unique
+  gesturesCount Int
+  touchesCount  Int
+  durationSec   Int
+  collaborators Int
+  notes         String?
+  Session       Session[]
+}
+
+enum Role {
+  VISITOR
+  ADMIN
+}
