@@ -74,7 +74,6 @@ export class AuthController {
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    // Clear cookie
     res.clearCookie('refresh_token', { path: '/auth/refresh' });
     return { message: 'Logged out successfully' };
   }
